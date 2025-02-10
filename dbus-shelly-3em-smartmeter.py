@@ -15,6 +15,7 @@ else:
 import sys
 import time
 import requests # for http GET
+from requests.auth import HTTPDigestAuth # Needed for Digest auth for Shelly Pro devices
 import configparser # for config/ini file
  
 # our own packages from victron
@@ -81,12 +82,19 @@ class DbusShelly3emService:
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
  
   def _getShellySerial(self):
-    meter_data = self._getShellyData()  
+    meter_data = self._getShellyData()
+    config = configparser.ConfigParser()
+    ShellyType = config['DEFAULT']['ShellyType']
     
-    if not meter_data['mac']:
-        raise ValueError("Response does not contain 'mac' attribute")
+    if ShellyType == 'Shelly3EM'
+        if not meter_data['mac']:
+            raise ValueError("Response does not contain 'mac' attribute")
+        >serial = meter_data['mac']
+    else if ShellyType == 'ShellyPro3EM'
+        if not meter_data['sys']['mac']:
+            raise ValueError("Response does not contain 'mac' attribute")
+        serial = meter_data['sys']['mac']
     
-    serial = meter_data['mac']
     return serial
  
  
@@ -119,19 +127,32 @@ class DbusShelly3emService:
   def _getShellyStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
-    
+    ShellyType = config['DEFAULT']['ShellyType']
+    Username = config['ONPREMISE']['Username']
+    Password = config['ONPREMISE']['Password']
+    Host = config['ONPREMISE']['Host']
+      
     if accessType == 'OnPremise': 
-        URL = "http://%s:%s@%s/status" % (config['ONPREMISE']['Username'], config['ONPREMISE']['Password'], config['ONPREMISE']['Host'])
-        URL = URL.replace(":@", "")
+        if ShellyType == 'ShellyPro3EM'
+            URL = "http://@%s/rpc/Shelly.GetStatus" % (Host)
+        else if ShellyType == 'Shelly3EM'
+            URL = "http://%s:%s@%s/status" % (Username, Password, Host)
+            URL = URL.replace(":@", "")
+        else  raise ValueError("ShellyType %s is not supported" % (ShellyType))
     else:
-        raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-    
+        raise ValueError("AccessType %s is not supported" % (accessType))
     return URL
     
  
   def _getShellyData(self):
     URL = self._getShellyStatusUrl()
-    meter_r = requests.get(url = URL, timeout=5)
+    config = configparser.ConfigParser()
+    ShellyType = config['DEFAULT']['ShellyType']
+    Username = config['ONPREMISE']['Username']
+    Password = config['ONPREMISE']['Password']
+      
+    if ShellyType == 'Shelly3EM' meter_r = requests.get(url = URL, timeout=5)
+    else if ShellyType == 'ShellyPro3EM'  meter_r = requests.get(url=URL, auth=HTTPDigestAuth(Username,Password), timeout=5)
     
     # check for response
     if not meter_r:
@@ -159,7 +180,8 @@ class DbusShelly3emService:
       #get data from Shelly 3em
       meter_data = self._getShellyData()
       config = self._getConfig()
-
+      ShellyType = config['DEFAULT']['ShellyType']
+    
       try:
         remapL1 = int(config['ONPREMISE']['L1Position'])
       except KeyError:
@@ -170,24 +192,45 @@ class DbusShelly3emService:
         meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
         meter_data['emeters'][remapL1-1] = old_l1
        
-      #send data to DBus
-      self._dbusservice['/Ac/Power'] = meter_data['total_power']
-      self._dbusservice['/Ac/L1/Voltage'] = meter_data['emeters'][0]['voltage']
-      self._dbusservice['/Ac/L2/Voltage'] = meter_data['emeters'][1]['voltage']
-      self._dbusservice['/Ac/L3/Voltage'] = meter_data['emeters'][2]['voltage']
-      self._dbusservice['/Ac/L1/Current'] = meter_data['emeters'][0]['current']
-      self._dbusservice['/Ac/L2/Current'] = meter_data['emeters'][1]['current']
-      self._dbusservice['/Ac/L3/Current'] = meter_data['emeters'][2]['current']
-      self._dbusservice['/Ac/L1/Power'] = meter_data['emeters'][0]['power']
-      self._dbusservice['/Ac/L2/Power'] = meter_data['emeters'][1]['power']
-      self._dbusservice['/Ac/L3/Power'] = meter_data['emeters'][2]['power']
-      self._dbusservice['/Ac/L1/Energy/Forward'] = (meter_data['emeters'][0]['total']/1000)
-      self._dbusservice['/Ac/L2/Energy/Forward'] = (meter_data['emeters'][1]['total']/1000)
-      self._dbusservice['/Ac/L3/Energy/Forward'] = (meter_data['emeters'][2]['total']/1000)
-      self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emeters'][0]['total_returned']/1000) 
-      self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emeters'][1]['total_returned']/1000) 
-      self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emeters'][2]['total_returned']/1000) 
-      
+        if ShellyType == 'Shelly3EM'
+            #send data to DBus
+            self._dbusservice['/Ac/Power'] = meter_data['total_power']
+            self._dbusservice['/Ac/L1/Voltage'] = meter_data['emeters'][0]['voltage']
+            self._dbusservice['/Ac/L2/Voltage'] = meter_data['emeters'][1]['voltage']
+            self._dbusservice['/Ac/L3/Voltage'] = meter_data['emeters'][2]['voltage']
+            self._dbusservice['/Ac/L1/Current'] = meter_data['emeters'][0]['current']
+            self._dbusservice['/Ac/L2/Current'] = meter_data['emeters'][1]['current']
+            self._dbusservice['/Ac/L3/Current'] = meter_data['emeters'][2]['current']
+            self._dbusservice['/Ac/L1/Power'] = meter_data['emeters'][0]['power']
+            self._dbusservice['/Ac/L2/Power'] = meter_data['emeters'][1]['power']
+            self._dbusservice['/Ac/L3/Power'] = meter_data['emeters'][2]['power']
+            self._dbusservice['/Ac/L1/Energy/Forward'] = (meter_data['emeters'][0]['total']/1000)
+            self._dbusservice['/Ac/L2/Energy/Forward'] = (meter_data['emeters'][1]['total']/1000)
+            self._dbusservice['/Ac/L3/Energy/Forward'] = (meter_data['emeters'][2]['total']/1000)
+            self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emeters'][0]['total_returned']/1000) 
+            self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emeters'][1]['total_returned']/1000) 
+            self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emeters'][2]['total_returned']/1000) 
+
+        else if ShellyType == 'ShellyPro3EM'
+            #send data to DBus
+            self._dbusservice['/Ac/Power'] = meter_data['em:0']['total_act_power'] # positive: consumption, negative: feed into grid
+            self._dbusservice['/Ac/L1/Voltage'] = meter_data['em:0']['a_voltage']
+            self._dbusservice['/Ac/L2/Voltage'] = meter_data['em:0']['b_voltage']
+            self._dbusservice['/Ac/L3/Voltage'] = meter_data['em:0']['c_voltage']
+            self._dbusservice['/Ac/L1/Current'] = meter_data['em:0']['a_current']
+            self._dbusservice['/Ac/L2/Current'] = meter_data['em:0']['b_current']
+            self._dbusservice['/Ac/L3/Current'] = meter_data['em:0']['c_current']
+            self._dbusservice['/Ac/L1/Power'] = meter_data['em:0']['a_act_power']
+            self._dbusservice['/Ac/L2/Power'] = meter_data['em:0']['b_act_power']
+            self._dbusservice['/Ac/L3/Power'] = meter_data['em:0']['c_act_power']
+            self._dbusservice['/Ac/L1/Energy/Forward'] = (meter_data['emdata:0']['a_total_act_energy']/1000)
+            self._dbusservice['/Ac/L2/Energy/Forward'] = (meter_data['emdata:0']['b_total_act_energy']/1000)
+            self._dbusservice['/Ac/L3/Energy/Forward'] = (meter_data['emdata:0']['c_total_act_energy']/1000)
+            self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emdata:0']['a_total_act_ret_energy']/1000) 
+            self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emdata:0']['b_total_act_ret_energy']/1000) 
+            self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emdata:0']['c_total_act_ret_energy']/1000) 
+       
+        
       # Old version
       #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
       #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
