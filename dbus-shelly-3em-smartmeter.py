@@ -84,7 +84,7 @@ class DbusShelly3emService:
   def _getShellySerial(self):
     meter_data = self._getShellyData()
     config = configparser.ConfigParser()
-    ShellyType = config['DEFAULT']['ShellyType']
+    ShellyType = config['ONPREMISE']['ShellyType']
     
     if ShellyType == 'Shelly3EM'
         if not meter_data['mac']:
@@ -127,7 +127,7 @@ class DbusShelly3emService:
   def _getShellyStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
-    ShellyType = config['DEFAULT']['ShellyType']
+    ShellyType = config['ONPREMISE']['ShellyType']
     Username = config['ONPREMISE']['Username']
     Password = config['ONPREMISE']['Password']
     Host = config['ONPREMISE']['Host']
@@ -147,7 +147,7 @@ class DbusShelly3emService:
   def _getShellyData(self):
     URL = self._getShellyStatusUrl()
     config = configparser.ConfigParser()
-    ShellyType = config['DEFAULT']['ShellyType']
+    ShellyType = config['ONPREMISE']['ShellyType']
     Username = config['ONPREMISE']['Username']
     Password = config['ONPREMISE']['Password']
       
@@ -180,7 +180,7 @@ class DbusShelly3emService:
       #get data from Shelly 3em
       meter_data = self._getShellyData()
       config = self._getConfig()
-      ShellyType = config['DEFAULT']['ShellyType']
+      ShellyType = config['ONPREMISE']['ShellyType']
     
       try:
         remapL1 = int(config['ONPREMISE']['L1Position'])
