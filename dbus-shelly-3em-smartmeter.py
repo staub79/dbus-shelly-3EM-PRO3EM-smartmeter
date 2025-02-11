@@ -83,7 +83,7 @@ class DbusShelly3emService:
  
   def _getShellySerial(self):
     meter_data = self._getShellyData()
-    config = configparser.ConfigParser()
+    config = self._getConfig()
     ShellyType = config['ONPREMISE']['ShellyType']
     
     try:
