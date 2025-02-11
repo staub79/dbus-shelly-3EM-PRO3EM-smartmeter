@@ -193,21 +193,21 @@ class DbusShelly3emService:
  
   def _update(self):   
     try:
-        #get data from Shelly 3em
-        meter_data = self._getShellyData()
-        config = self._getConfig()
-        ShellyType = config['ONPREMISE']['ShellyType']
-        try:
-            remapL1 = int(config['ONPREMISE']['L1Position'])
-        except KeyError:
-            remapL1 = 1
-    
-        if remapL1 > 1:
-            logging.debug("Remapping L1 meter_data to phase %s" % remapL1)
-            old_l1 = meter_data['emeters'][0]
-            meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
-            meter_data['emeters'][remapL1-1] = old_l1
-       
+      #get data from Shelly 3em
+      meter_data = self._getShellyData()
+      config = self._getConfig()
+      ShellyType = config['ONPREMISE']['ShellyType']
+
+      try:
+        remapL1 = int(config['ONPREMISE']['L1Position'])
+      except KeyError:
+        remapL1 = 1
+
+      if remapL1 > 1:
+        old_l1 = meter_data['emeters'][0]
+        meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
+        meter_data['emeters'][remapL1-1] = old_l1
+
         if ShellyType == 'Shelly3EM':
             #send data to DBus
             self._dbusservice['/Ac/Power'] = meter_data['total_power']
