@@ -143,7 +143,7 @@ class DbusShelly3emService:
         Password = config['ONPREMISE']['Password']
         Host = config['ONPREMISE']['Host']
         if ShellyType == 'ShellyPro3EM':
-            URL = "http://@%s/rpc/Shelly.GetStatus" % (Host)
+            URL = "http://%s/rpc/Shelly.GetStatus" % (Host)
         elif ShellyType == 'Shelly3EM':
             URL = "http://%s:%s@%s/status" % (Username, Password, Host)
             URL = URL.replace(":@", "")
@@ -166,7 +166,7 @@ class DbusShelly3emService:
         logging.debug("Retreiving Shelly3EM data from URL %s" % URL)
         meter_r = requests.get(url = URL, timeout=5)
     elif ShellyType == 'ShellyPro3EM':
-        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % Username,Password,URL)
+        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % (Username,Password,URL))
         meter_r = requests.get(url=URL, auth=HTTPDigestAuth(Username,Password), timeout=5)
     else:
         raise ValueError(f"Unsupported ShellyType: {ShellyType}")
@@ -180,7 +180,7 @@ class DbusShelly3emService:
     # check for Json
     if not meter_data:
         raise ValueError("Converting response to JSON failed")
-        
+    logging.debug("Retreived the following meter data: %s" % meter_data)    
     return meter_data
  
  
@@ -192,21 +192,22 @@ class DbusShelly3emService:
     return True
  
   def _update(self):   
-    try:
-      #get data from Shelly 3em
-      meter_data = self._getShellyData()
-      config = self._getConfig()
-      ShellyType = config['ONPREMISE']['ShellyType']
-    
-      try:
-        remapL1 = int(config['ONPREMISE']['L1Position'])
-      except KeyError:
-        remapL1 = 1
+        config = self._getConfig()
+        ShellyType = config['ONPREMISE']['ShellyType']
 
-      if remapL1 > 1:
-        old_l1 = meter_data['emeters'][0]
-        meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
-        meter_data['emeters'][remapL1-1] = old_l1
+        try:
+            #get data from Shelly 3em
+            meter_data = self._getShellyData()
+        try:
+            remapL1 = int(config['ONPREMISE']['L1Position'])
+        except KeyError:
+            remapL1 = 1
+    
+        if remapL1 > 1:
+            logging.debug("Remapping L1 meter_data to phase %s", remapL1)
+            old_l1 = meter_data['emeters'][0]
+            meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
+            meter_data['emeters'][remapL1-1] = old_l1
        
         if ShellyType == 'Shelly3EM':
             #send data to DBus
@@ -226,7 +227,6 @@ class DbusShelly3emService:
             self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emeters'][0]['total_returned']/1000) 
             self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emeters'][1]['total_returned']/1000) 
             self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emeters'][2]['total_returned']/1000) 
-
         elif ShellyType == 'ShellyPro3EM':
             #send data to DBus
             self._dbusservice['/Ac/Power'] = meter_data['em:0']['total_act_power'] # positive: consumption, negative: feed into grid
@@ -246,7 +246,7 @@ class DbusShelly3emService:
             self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emdata:0']['b_total_act_ret_energy']/1000) 
             self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emdata:0']['c_total_act_ret_energy']/1000) 
       else:
-          raise ValueError(f"Unsupported ShellyType: {ShellyType}")
+          raise ValueError("Unsupported ShellyType: {ShellyType}")
         
       # Old version
       #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
