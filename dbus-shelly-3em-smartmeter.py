@@ -143,7 +143,7 @@ class DbusShelly3emService:
         Password = config['ONPREMISE']['Password']
         Host = config['ONPREMISE']['Host']
         if ShellyType == 'ShellyPro3EM':
-            URL = "http://@%s/rpc/Shelly.GetStatus" % (Host)
+            URL = "http://%s/rpc/Shelly.GetStatus" % (Host)
         elif ShellyType == 'Shelly3EM':
             URL = "http://%s:%s@%s/status" % (Username, Password, Host)
             URL = URL.replace(":@", "")
@@ -180,7 +180,7 @@ class DbusShelly3emService:
     # check for Json
     if not meter_data:
         raise ValueError("Converting response to JSON failed")
-        
+    logging.debug("Retreived the following meter data: %s " % meter_data)
     return meter_data
  
  
