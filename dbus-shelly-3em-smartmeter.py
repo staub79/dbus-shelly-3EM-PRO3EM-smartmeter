@@ -166,7 +166,7 @@ class DbusShelly3emService:
         logging.debug("Retreiving Shelly3EM data from URL %s" % URL)
         meter_r = requests.get(url = URL, timeout=5)
     elif ShellyType == 'ShellyPro3EM':
-        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % Username,Password,URL)
+        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % (Username,Password,URL))
         meter_r = requests.get(url=URL, auth=HTTPDigestAuth(Username,Password), timeout=5)
     else:
         raise ValueError(f"Unsupported ShellyType: {ShellyType}")
