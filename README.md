@@ -16,11 +16,11 @@ If you do not have git installed do the following.
 - Delete the old py scrip:
   rm dbus-shelly-3em-smartmeter.py
 - Download this py script
-  wget https://raw.githubusercontent.com/staub79/dbus-shelly-3em-smartmeter/main/dbus-shelly-3em-smartmeter.py
+  wget https://raw.githubusercontent.com/staub79/dbus-shelly-3em-pro3em-smartmeter/main/dbus-shelly-3em-smartmeter.py
 - Delete the old config.ini
   rm config.ini
 - Download this config.ini
-  wget https://raw.githubusercontent.com/staub79/dbus-shelly-3em-smartmeter/main/config.ini
+  wget https://raw.githubusercontent.com/staub79/dbus-shelly-3em-pro3em-smartmeter/main/config.ini
 - Update the information in config.ini for your setup
   nano config.ini
 - Fire it up
