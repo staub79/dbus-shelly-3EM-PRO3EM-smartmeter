@@ -193,21 +193,11 @@ class DbusShelly3emService:
  
   def _update(self):   
     try:
-      #get data from Shelly 3em
-      meter_data = self._getShellyData()
-
-      try:
-        remapL1 = int(config['ONPREMISE']['L1Position'])
-      except KeyError:
-        remapL1 = 1
-
-      if remapL1 > 1:
-        old_l1 = meter_data['emeters'][0]
-        meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
-        meter_data['emeters'][remapL1-1] = old_l1
-
+        #get data from Shelly 3em
+        meter_data = self._getShellyData()
         config = self._getConfig()
         ShellyType = config['ONPREMISE']['ShellyType']
+
         if ShellyType == 'Shelly3EM':
             #send data to DBus
             self._dbusservice['/Ac/Power'] = meter_data['total_power']
@@ -247,38 +237,38 @@ class DbusShelly3emService:
           else:
               raise ValueError(f"Unsupported ShellyType: {ShellyType}")
         
-      # Old version
-      #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
-      #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
-      
-      # New Version - from xris99
-      #Calc = 60min * 60 sec / 0.500 (refresh interval of 500ms) * 1000
-      if (self._dbusservice['/Ac/Power'] > 0):
-           self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power']/(60*60/0.5*1000))            
-      if (self._dbusservice['/Ac/Power'] < 0):
-           self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power']*-1/(60*60/0.5*1000))
+          # Old version
+          #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
+          #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
+          
+          # New Version - from xris99
+          #Calc = 60min * 60 sec / 0.500 (refresh interval of 500ms) * 1000
+          if (self._dbusservice['/Ac/Power'] > 0):
+               self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power']/(60*60/0.5*1000))            
+          if (self._dbusservice['/Ac/Power'] < 0):
+               self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power']*-1/(60*60/0.5*1000))
 
-      
-      #logging
-      logging.debug("House Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
-      logging.debug("House Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
-      logging.debug("House Reverse (/Ac/Energy/Revers): %s" % (self._dbusservice['/Ac/Energy/Reverse']))
-      logging.debug("---");
-      
-      # increment UpdateIndex - to show that new data is available an wrap
-      self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256
+          
+          #logging
+          logging.debug("House Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
+          logging.debug("House Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
+          logging.debug("House Reverse (/Ac/Energy/Revers): %s" % (self._dbusservice['/Ac/Energy/Reverse']))
+          logging.debug("---");
+          
+          # increment UpdateIndex - to show that new data is available an wrap
+          self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256
 
-      #update lastupdate vars
-      self._lastUpdate = time.time()
+          #update lastupdate vars
+          self._lastUpdate = time.time()
     except (ValueError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, ConnectionError) as e:
-       logging.critical('Error getting data from Shelly - check network or Shelly status. Setting power values to 0. Details: %s', e, exc_info=e)       
-       self._dbusservice['/Ac/L1/Power'] = 0                                       
-       self._dbusservice['/Ac/L2/Power'] = 0                                       
-       self._dbusservice['/Ac/L3/Power'] = 0
-       self._dbusservice['/Ac/Power'] = 0
-       self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256        
+           logging.critical('Error getting data from Shelly - check network or Shelly status. Setting power values to 0. Details: %s', e, exc_info=e)       
+           self._dbusservice['/Ac/L1/Power'] = 0                                       
+           self._dbusservice['/Ac/L2/Power'] = 0                                       
+           self._dbusservice['/Ac/L3/Power'] = 0
+           self._dbusservice['/Ac/Power'] = 0
+           self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256        
     except Exception as e:
-       logging.critical('Error at %s', '_update', exc_info=e)
+        logging.critical('Error at %s', '_update', exc_info=e)
        
     # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
     return True
