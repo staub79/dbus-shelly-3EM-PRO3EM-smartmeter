@@ -23,4 +23,5 @@ If you do not have git installed do the following.
   wget https://raw.githubusercontent.com/staub79/dbus-shelly-3em-smartmeter/main/config.ini
 - Update the information in config.ini for your setup
   nano config.ini
-
+- Fire it up
+  ./install.sh
