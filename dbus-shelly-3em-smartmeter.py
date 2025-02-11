@@ -234,39 +234,39 @@ class DbusShelly3emService:
             self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emdata:0']['a_total_act_ret_energy']/1000) 
             self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emdata:0']['b_total_act_ret_energy']/1000) 
             self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emdata:0']['c_total_act_ret_energy']/1000) 
-          else:
-              raise ValueError(f"Unsupported ShellyType: {ShellyType}")
+        else:
+            raise ValueError(f"Unsupported ShellyType: {ShellyType}")
         
-          # Old version
-          #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
-          #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
-          
-          # New Version - from xris99
-          #Calc = 60min * 60 sec / 0.500 (refresh interval of 500ms) * 1000
-          if (self._dbusservice['/Ac/Power'] > 0):
-               self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power']/(60*60/0.5*1000))            
-          if (self._dbusservice['/Ac/Power'] < 0):
-               self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power']*-1/(60*60/0.5*1000))
+        # Old version
+        #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
+        #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
 
-          
-          #logging
-          logging.debug("House Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
-          logging.debug("House Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
-          logging.debug("House Reverse (/Ac/Energy/Revers): %s" % (self._dbusservice['/Ac/Energy/Reverse']))
-          logging.debug("---");
-          
-          # increment UpdateIndex - to show that new data is available an wrap
-          self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256
+        # New Version - from xris99
+        #Calc = 60min * 60 sec / 0.500 (refresh interval of 500ms) * 1000
+        if (self._dbusservice['/Ac/Power'] > 0):
+           self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power']/(60*60/0.5*1000))            
+        if (self._dbusservice['/Ac/Power'] < 0):
+           self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power']*-1/(60*60/0.5*1000))
 
-          #update lastupdate vars
-          self._lastUpdate = time.time()
+
+        #logging
+        logging.debug("House Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
+        logging.debug("House Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
+        logging.debug("House Reverse (/Ac/Energy/Reverse): %s" % (self._dbusservice['/Ac/Energy/Reverse']))
+        logging.debug("---");
+
+        # increment UpdateIndex - to show that new data is available an wrap
+        self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256
+
+        #update lastupdate vars
+        self._lastUpdate = time.time()
     except (ValueError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, ConnectionError) as e:
-           logging.critical('Error getting data from Shelly - check network or Shelly status. Setting power values to 0. Details: %s', e, exc_info=e)       
-           self._dbusservice['/Ac/L1/Power'] = 0                                       
-           self._dbusservice['/Ac/L2/Power'] = 0                                       
-           self._dbusservice['/Ac/L3/Power'] = 0
-           self._dbusservice['/Ac/Power'] = 0
-           self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256        
+        logging.critical('Error getting data from Shelly - check network or Shelly status. Setting power values to 0. Details: %s', e, exc_info=e)       
+        self._dbusservice['/Ac/L1/Power'] = 0                                       
+        self._dbusservice['/Ac/L2/Power'] = 0                                       
+        self._dbusservice['/Ac/L3/Power'] = 0
+        self._dbusservice['/Ac/Power'] = 0
+        self._dbusservice['/UpdateIndex'] = (self._dbusservice['/UpdateIndex'] + 1 ) % 256        
     except Exception as e:
         logging.critical('Error at %s', '_update', exc_info=e)
        
