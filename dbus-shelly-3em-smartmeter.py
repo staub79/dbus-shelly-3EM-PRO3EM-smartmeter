@@ -136,12 +136,12 @@ class DbusShelly3emService:
   def _getShellyStatusUrl(self):
     config = self._getConfig()
     accessType = config['DEFAULT']['AccessType']
-    ShellyType = config['ONPREMISE']['ShellyType']
-    Username = config['ONPREMISE']['Username']
-    Password = config['ONPREMISE']['Password']
-    Host = config['ONPREMISE']['Host']
       
     if accessType == 'OnPremise': 
+        ShellyType = config['ONPREMISE']['ShellyType']
+        Username = config['ONPREMISE']['Username']
+        Password = config['ONPREMISE']['Password']
+        Host = config['ONPREMISE']['Host']
         if ShellyType == 'ShellyPro3EM':
             URL = "http://@%s/rpc/Shelly.GetStatus" % (Host)
         elif ShellyType == 'Shelly3EM':
@@ -156,7 +156,7 @@ class DbusShelly3emService:
  
   def _getShellyData(self):
     URL = self._getShellyStatusUrl()
-    config = configparser.ConfigParser()
+    config = self._getConfig()
     ShellyType = config['ONPREMISE']['ShellyType']
     Username = config['ONPREMISE']['Username']
     Password = config['ONPREMISE']['Password']
