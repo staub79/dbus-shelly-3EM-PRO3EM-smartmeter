@@ -86,14 +86,23 @@ class DbusShelly3emService:
     config = configparser.ConfigParser()
     ShellyType = config['ONPREMISE']['ShellyType']
     
-    if ShellyType == 'Shelly3EM'
-        if not meter_data['mac']:
+    try:
+        ShellyType = config['ONPREMISE']['ShellyType']
+    except KeyError:
+        raise ValueError("Missing 'ShellyType' in config file under [ONPREMISE]")
+
+    if ShellyType == 'Shelly3EM':
+        if 'mac' not in meter_data:
             raise ValueError("Response does not contain 'mac' attribute")
-        >serial = meter_data['mac']
-    else if ShellyType == 'ShellyPro3EM'
-        if not meter_data['sys']['mac']:
-            raise ValueError("Response does not contain 'mac' attribute")
+        serial = meter_data['mac']
+    
+    elif ShellyType == 'ShellyPro3EM':
+        if 'sys' not in meter_data or 'mac' not in meter_data['sys']:
+            raise ValueError("Response does not contain 'sys/mac' attribute")
         serial = meter_data['sys']['mac']
+    
+    else:
+        raise ValueError(f"Unsupported ShellyType: {ShellyType}")
     
     return serial
  
