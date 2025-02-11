@@ -103,7 +103,7 @@ class DbusShelly3emService:
     
     else:
         raise ValueError(f"Unsupported ShellyType: {ShellyType}")
-    
+    logging.debug("Retreived serial %s from Shelly" % serial)
     return serial
  
  
@@ -151,6 +151,7 @@ class DbusShelly3emService:
             raise ValueError("ShellyType %s is not supported" % (ShellyType))
     else:
         raise ValueError("AccessType %s is not supported" % (accessType))
+    logging.debug("Using the following URL to retreive Shelly status %s" % URL)
     return URL
     
  
@@ -162,8 +163,10 @@ class DbusShelly3emService:
     Password = config['ONPREMISE']['Password']
       
     if ShellyType == 'Shelly3EM':
+        logging.debug("Retreiving Shelly3EM data from URL %s" % URL)
         meter_r = requests.get(url = URL, timeout=5)
     elif ShellyType == 'ShellyPro3EM':
+        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % Username,Password,URL)
         meter_r = requests.get(url=URL, auth=HTTPDigestAuth(Username,Password), timeout=5)
     else:
         raise ValueError(f"Unsupported ShellyType: {ShellyType}")
