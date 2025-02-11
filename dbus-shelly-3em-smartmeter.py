@@ -192,12 +192,11 @@ class DbusShelly3emService:
     return True
  
   def _update(self):   
+    try:
+        #get data from Shelly 3em
+        meter_data = self._getShellyData()
         config = self._getConfig()
         ShellyType = config['ONPREMISE']['ShellyType']
-
-        try:
-            #get data from Shelly 3em
-            meter_data = self._getShellyData()
         try:
             remapL1 = int(config['ONPREMISE']['L1Position'])
         except KeyError:
