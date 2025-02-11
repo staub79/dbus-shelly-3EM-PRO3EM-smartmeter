@@ -204,7 +204,7 @@ class DbusShelly3emService:
             remapL1 = 1
     
         if remapL1 > 1:
-            logging.debug("Remapping L1 meter_data to phase %s", remapL1)
+            logging.debug("Remapping L1 meter_data to phase %s" % remapL1)
             old_l1 = meter_data['emeters'][0]
             meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
             meter_data['emeters'][remapL1-1] = old_l1
