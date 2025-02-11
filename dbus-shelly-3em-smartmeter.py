@@ -143,7 +143,7 @@ class DbusShelly3emService:
         Password = config['ONPREMISE']['Password']
         Host = config['ONPREMISE']['Host']
         if ShellyType == 'ShellyPro3EM':
-            URL = "http://%s/rpc/Shelly.GetStatus" % (Host)
+            URL = "http://@%s/rpc/Shelly.GetStatus" % (Host)
         elif ShellyType == 'Shelly3EM':
             URL = "http://%s:%s@%s/status" % (Username, Password, Host)
             URL = URL.replace(":@", "")
@@ -166,7 +166,7 @@ class DbusShelly3emService:
         logging.debug("Retreiving Shelly3EM data from URL %s" % URL)
         meter_r = requests.get(url = URL, timeout=5)
     elif ShellyType == 'ShellyPro3EM':
-        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % (Username,Password,URL))
+        logging.debug("Retreiving ShellyPro3EM data with Username %s and Password %s from URL %s" % Username,Password,URL)
         meter_r = requests.get(url=URL, auth=HTTPDigestAuth(Username,Password), timeout=5)
     else:
         raise ValueError(f"Unsupported ShellyType: {ShellyType}")
@@ -180,7 +180,7 @@ class DbusShelly3emService:
     # check for Json
     if not meter_data:
         raise ValueError("Converting response to JSON failed")
-    logging.debug("Retreived the following meter data: %s" % meter_data)    
+        
     return meter_data
  
  
@@ -245,7 +245,7 @@ class DbusShelly3emService:
             self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emdata:0']['b_total_act_ret_energy']/1000) 
             self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emdata:0']['c_total_act_ret_energy']/1000) 
       else:
-          raise ValueError("Unsupported ShellyType: {ShellyType}")
+          raise ValueError(f"Unsupported ShellyType: {ShellyType}")
         
       # Old version
       #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
